@@ -9,6 +9,13 @@ import { useFonts, Inter_900Black } from "@expo-google-fonts/dev";
 import { ExamplesScreens } from "./screens/ExamplesScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { TokenListNavigator } from "./screens/TokenNavigator";
+import {MintNFTs} from "./screens/MintScreen";
+import {WalletAdapterNetwork} from "@solana/wallet-adapter-base";
+import {useMemo, useState} from "react";
+import {clusterApiUrl} from "@solana/web3.js";
+import {ConnectionProvider, WalletProvider} from "@solana/wallet-adapter-react";
+import {MetaplexProvider} from "./MetaplexProvider";
+import {UnsafeBurnerWalletAdapter, PhantomWalletAdapter, BackpackWalletAdapter} from "@solana/wallet-adapter-wallets";
 
 const Tab = createBottomTabNavigator();
 
@@ -43,7 +50,7 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="Examples"
-        component={ExamplesScreens}
+        component={MintNFTs}
         options={{
           tabBarLabel: "Examples",
           tabBarIcon: ({ color, size }) => (
@@ -56,9 +63,18 @@ function TabNavigator() {
 }
 
 function App() {
-  let [fontsLoaded] = useFonts({
+  const [network, setNetwork] = useState();
+  const endpoint = clusterApiUrl(WalletAdapterNetwork.Devnet)
+    let [fontsLoaded] = useFonts({
     Inter_900Black,
   });
+
+
+    const wallets = [
+        new BackpackWalletAdapter(),
+        new UnsafeBurnerWalletAdapter(),
+        new PhantomWalletAdapter(),
+    ]
 
   if (!fontsLoaded) {
     return (
@@ -69,11 +85,19 @@ function App() {
   }
 
   return (
-    <RecoilRoot>
-      <NavigationContainer>
-        <TabNavigator />
-      </NavigationContainer>
-    </RecoilRoot>
+      <ConnectionProvider endpoint={endpoint}>
+          <WalletProvider autoConnect={true} wallets={wallets}>
+          <MetaplexProvider>
+
+        <RecoilRoot>
+          <NavigationContainer>
+            <TabNavigator />
+          </NavigationContainer>
+        </RecoilRoot>
+
+          </MetaplexProvider>
+          </WalletProvider>
+      </ConnectionProvider>
   );
 }
 
